@@ -66,4 +66,17 @@ public class ProdutoService {
 
         return produtoExistente;
     }
+
+    public boolean excluirProduto(Long id) {
+
+        Produto produtoExistente = buscarProdutoPorId(id);
+
+        if (produtoExistente == null) {
+            return false;
+        }
+
+        produtos.remove(produtoExistente);
+
+        return true;
+    }
 }
