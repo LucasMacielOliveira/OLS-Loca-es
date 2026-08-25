@@ -1,44 +1,40 @@
 package ols_locacoes.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import ols_locacoes.model.Produto;
+import ols_locacoes.repository.ProdutoRepository;
 
 @Service
 public class ProdutoService {
 
-    private final List<Produto> produtos = new ArrayList<>();
+    private final ProdutoRepository produtoRepository;
 
-    private Long proximoId = 1L;
+    public ProdutoService(
+            ProdutoRepository produtoRepository
+    ) {
+
+        this.produtoRepository = produtoRepository;
+    }
 
     public List<Produto> listarProdutos() {
-        return produtos;
+        return produtoRepository.findAll();
     }
 
     public Produto cadastrarProduto(Produto produto) {
 
-        produto.setId(proximoId);
+        produto.setId(null);
 
-        proximoId++;
-
-        produtos.add(produto);
-
-        return produto;
+        return produtoRepository.save(produto);
     }
 
     public Produto buscarProdutoPorId(Long id) {
 
-        for (Produto produto : produtos) {
-
-            if (produto.getId().equals(id)) {
-                return produto;
-            }
-        }
-
-        return null;
+        return produtoRepository
+                .findById(id)
+                .orElse(null);
     }
 
     public Produto atualizarProduto(
@@ -64,18 +60,18 @@ public class ProdutoService {
                 dadosAtualizados.getQuantidadeTotal()
         );
 
-        return produtoExistente;
+        return produtoRepository.save(
+                produtoExistente
+        );
     }
 
     public boolean excluirProduto(Long id) {
 
-        Produto produtoExistente = buscarProdutoPorId(id);
-
-        if (produtoExistente == null) {
+        if (!produtoRepository.existsById(id)) {
             return false;
         }
 
-        produtos.remove(produtoExistente);
+        produtoRepository.deleteById(id);
 
         return true;
     }

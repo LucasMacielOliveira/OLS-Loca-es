@@ -1,20 +1,41 @@
 package ols_locacoes.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "produtos")
 public class Produto {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String nome;
+
+    @Column(nullable = false)
     private String categoria;
+
+    @Column(name = "quantidade_total", nullable = false)
     private int quantidadeTotal;
 
-    // Construtor vazio utilizado na conversão do JSON para objeto.
     public Produto() {
     }
 
-    // Construtor utilizado quando criamos um produto manualmente.
-    public Produto(String nome, String categoria, int quantidadeTotal) {
+    public Produto(
+            String nome,
+            String categoria,
+            int quantidadeTotal
+    ) {
+
         this.nome = nome;
         this.categoria = categoria;
+
         setQuantidadeTotal(quantidadeTotal);
     }
 
@@ -58,8 +79,12 @@ public class Produto {
     }
 
     public void exibirInformacoes() {
+
+        System.out.println("ID: " + id);
         System.out.println("Produto: " + nome);
         System.out.println("Categoria: " + categoria);
-        System.out.println("Quantidade em estoque: " + quantidadeTotal);
+        System.out.println(
+                "Quantidade em estoque: " + quantidadeTotal
+        );
     }
 }
