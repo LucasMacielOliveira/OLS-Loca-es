@@ -1,7 +1,9 @@
-package ols_locacoes.controller;
+package ols_locacoes.Controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +30,20 @@ public class ProdutoController {
         return produtoService.listarProdutos();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Produto> buscarProdutoPorId(
+            @PathVariable Long id
+    ) {
+
+        Produto produto = produtoService.buscarProdutoPorId(id);
+
+        if (produto == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(produto);
+    }
+
     @PostMapping
     public ResponseEntity<Produto> cadastrarProduto(
             @RequestBody Produto produto
@@ -38,5 +54,23 @@ public class ProdutoController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(produtoCadastrado);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Produto> atualizarProduto(
+            @PathVariable Long id,
+            @RequestBody Produto dadosAtualizados
+    ) {
+
+        Produto produtoAtualizado = produtoService.atualizarProduto(
+                id,
+                dadosAtualizados
+        );
+
+        if (produtoAtualizado == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(produtoAtualizado);
     }
 }

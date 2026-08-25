@@ -2,6 +2,7 @@ package ols_locacoes.model;
 
 public class Produto {
 
+    private Long id;
     private String nome;
     private String categoria;
     private int quantidadeTotal;
@@ -15,6 +16,14 @@ public class Produto {
         this.nome = nome;
         this.categoria = categoria;
         setQuantidadeTotal(quantidadeTotal);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNome() {
