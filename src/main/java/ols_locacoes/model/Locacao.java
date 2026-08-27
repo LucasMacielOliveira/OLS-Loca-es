@@ -3,6 +3,8 @@ package ols_locacoes.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "locacoes")
@@ -29,10 +31,20 @@ public class Locacao {
     @Column(nullable = false)
     private StatusLocacao status;
 
+    @OneToMany(
+            mappedBy = "locacao",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ItemLocacao> itens = new ArrayList<>();
+
     public Locacao() {
     }
 
-    public Locacao(Cliente cliente, LocalDate dataPrevistaDevolucao) {
+    public Locacao(
+            Cliente cliente,
+            LocalDate dataPrevistaDevolucao) {
+
         this.cliente = cliente;
         this.dataRetirada = LocalDate.now();
         this.dataPrevistaDevolucao = dataPrevistaDevolucao;
@@ -61,6 +73,20 @@ public class Locacao {
 
     public StatusLocacao getStatus() {
         return status;
+    }
+
+    public List<ItemLocacao> getItens() {
+        return itens;
+    }
+
+    public void adicionarItem(
+            Produto produto,
+            Integer quantidade) {
+
+        ItemLocacao item =
+                new ItemLocacao(this, produto, quantidade);
+
+        itens.add(item);
     }
 
     public void registrarDevolucao() {
