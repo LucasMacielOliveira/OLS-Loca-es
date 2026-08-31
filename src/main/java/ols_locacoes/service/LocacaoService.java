@@ -1,5 +1,6 @@
 package ols_locacoes.service;
 
+import ols_locacoes.dto.LocacaoResponse;
 import ols_locacoes.dto.ItemLocacaoRequest;
 import ols_locacoes.dto.LocacaoRequest;
 import ols_locacoes.model.Cliente;
@@ -36,7 +37,7 @@ public class LocacaoService {
         this.itemLocacaoRepository = itemLocacaoRepository;
     }
     @Transactional
-    public Locacao cadastrar(LocacaoRequest request) {
+    public LocacaoResponse cadastrar(LocacaoRequest request) {
         validarRequisicao(request);
 
         Cliente cliente = clienteRepository
@@ -100,7 +101,10 @@ public class LocacaoService {
             );
         }
 
-        return locacaoRepository.save(locacao);
+        Locacao locacaoSalva =
+                locacaoRepository.save(locacao);
+
+        return LocacaoResponse.fromEntity(locacaoSalva);
     }
 
     private void validarRequisicao(LocacaoRequest request) {
