@@ -1,0 +1,115 @@
+[1mdiff --git a/src/main/java/ols_locacoes/model/ItemLocacao.java b/src/main/java/ols_locacoes/model/ItemLocacao.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..e4495d4[m
+[1m--- /dev/null[m
+[1m+++ b/src/main/java/ols_locacoes/model/ItemLocacao.java[m
+[36m@@ -0,0 +1,52 @@[m
+[32m+[m[32mpackage ols_locacoes.model;[m
+[32m+[m
+[32m+[m[32mimport jakarta.persistence.*;[m
+[32m+[m
+[32m+[m[32m@Entity[m
+[32m+[m[32m@Table(name = "itens_locacao")[m
+[32m+[m[32mpublic class ItemLocacao {[m
+[32m+[m
+[32m+[m[32m    @Id[m
+[32m+[m[32m    @GeneratedValue(strategy = GenerationType.IDENTITY)[m
+[32m+[m[32m    private Long id;[m
+[32m+[m
+[32m+[m[32m    @ManyToOne(fetch = FetchType.LAZY, optional = false)[m
+[32m+[m[32m    @JoinColumn(name = "locacao_id", nullable = false)[m
+[32m+[m[32m    private Locacao locacao;[m
+[32m+[m
+[32m+[m[32m    @ManyToOne(fetch = FetchType.LAZY, optional = false)[m
+[32m+[m[32m    @JoinColumn(name = "produto_id", nullable = false)[m
+[32m+[m[32m    private Produto produto;[m
+[32m+[m
+[32m+[m[32m    @Column(nullable = false)[m
+[32m+[m[32m    private Integer quantidade;[m
+[32m+[m
+[32m+[m[32m    public ItemLocacao() {[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public ItemLocacao([m
+[32m+[m[32m            Locacao locacao,[m
+[32m+[m[32m            Produto produto,[m
+[32m+[m[32m            Integer quantidade) {[m
+[32m+[m
+[32m+[m[32m        this.locacao = locacao;[m
+[32m+[m[32m        this.produto = produto;[m
+[32m+[m[32m        this.quantidade = quantidade;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Long getId() {[m
+[32m+[m[32m        return id;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Locacao getLocacao() {[m
+[32m+[m[32m        return locacao;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Produto getProduto() {[m
+[32m+[m[32m        return produto;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Integer getQuantidade() {[m
+[32m+[m[32m        return quantidade;[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/src/main/java/ols_locacoes/model/Locacao.java b/src/main/java/ols_locacoes/model/Locacao.java[m
+[1mindex c330899..0a6f2cb 100644[m
+[1m--- a/src/main/java/ols_locacoes/model/Locacao.java[m
+[1m+++ b/src/main/java/ols_locacoes/model/Locacao.java[m
+[36m@@ -3,6 +3,8 @@[m [mpackage ols_locacoes.model;[m
+ import jakarta.persistence.*;[m
+ [m
+ import java.time.LocalDate;[m
+[32m+[m[32mimport java.util.ArrayList;[m
+[32m+[m[32mimport java.util.List;[m
+ [m
+ @Entity[m
+ @Table(name = "locacoes")[m
+[36m@@ -29,10 +31,20 @@[m [mpublic class Locacao {[m
+     @Column(nullable = false)[m
+     private StatusLocacao status;[m
+ [m
+[32m+[m[32m    @OneToMany([m
+[32m+[m[32m            mappedBy = "locacao",[m
+[32m+[m[32m            cascade = CascadeType.ALL,[m
+[32m+[m[32m            orphanRemoval = true[m
+[32m+[m[32m    )[m
+[32m+[m[32m    private List<ItemLocacao> itens = new ArrayList<>();[m
+[32m+[m
+     public Locacao() {[m
+     }[m
+ [m
+[31m-    public Locacao(Cliente cliente, LocalDate dataPrevistaDevolucao) {[m
+[32m+[m[32m    public Locacao([m
+[32m+[m[32m            Cliente cliente,[m
+[32m+[m[32m            LocalDate dataPrevistaDevolucao) {[m
+[32m+[m
+         this.cliente = cliente;[m
+         this.dataRetirada = LocalDate.now();[m
+         this.dataPrevistaDevolucao = dataPrevistaDevolucao;[m
+[36m@@ -63,6 +75,20 @@[m [mpublic class Locacao {[m
+         return status;[m
+     }[m
+ [m
+[32m+[m[32m    public List<ItemLocacao> getItens() {[m
+[32m+[m[32m        return itens;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void adicionarItem([m
+[32m+[m[32m            Produto produto,[m
+[32m+[m[32m            Integer quantidade) {[m
+[32m+[m
+[32m+[m[32m        ItemLocacao item =[m
+[32m+[m[32m                new ItemLocacao(this, produto, quantidade);[m
+[32m+[m
+[32m+[m[32m        itens.add(item);[m
+[32m+[m[32m    }[m
+[32m+[m
+     public void registrarDevolucao() {[m
+         this.dataDevolucao = LocalDate.now();[m
+         this.status = StatusLocacao.DEVOLVIDA;[m
