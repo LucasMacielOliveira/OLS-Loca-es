@@ -1,8 +1,10 @@
 package ols_locacoes.service;
 
-import ols_locacoes.dto.LocacaoResponse;
 import ols_locacoes.dto.ItemLocacaoRequest;
 import ols_locacoes.dto.LocacaoRequest;
+import ols_locacoes.dto.LocacaoResponse;
+import ols_locacoes.exception.RegraNegocioException;
+import ols_locacoes.exception.RecursoNaoEncontradoException;
 import ols_locacoes.model.Cliente;
 import ols_locacoes.model.Locacao;
 import ols_locacoes.model.Produto;
@@ -20,6 +22,7 @@ import java.util.Set;
 
 @Service
 public class LocacaoService {
+
     private final LocacaoRepository locacaoRepository;
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
@@ -29,13 +32,14 @@ public class LocacaoService {
             LocacaoRepository locacaoRepository,
             ClienteRepository clienteRepository,
             ProdutoRepository produtoRepository,
-            ItemLocacaoRepository itemLocacaoRepository){
+            ItemLocacaoRepository itemLocacaoRepository) {
 
         this.locacaoRepository = locacaoRepository;
         this.clienteRepository = clienteRepository;
         this.produtoRepository = produtoRepository;
         this.itemLocacaoRepository = itemLocacaoRepository;
     }
+
     @Transactional
     public LocacaoResponse cadastrar(LocacaoRequest request) {
         validarRequisicao(request);
@@ -43,8 +47,9 @@ public class LocacaoService {
         Cliente cliente = clienteRepository
                 .findById(request.getClienteId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Cliente não encontrado"
+                        new RecursoNaoEncontradoException(
+                                "Cliente não encontrado: "
+                                        + request.getClienteId()
                         )
                 );
 
@@ -61,7 +66,7 @@ public class LocacaoService {
             Long produtoId = itemRequest.getProdutoId();
 
             if (!produtosAdicionados.add(produtoId)) {
-                throw new IllegalArgumentException(
+                throw new RegraNegocioException(
                         "O mesmo produto não pode aparecer duas vezes"
                 );
             }
@@ -69,8 +74,9 @@ public class LocacaoService {
             Produto produto = produtoRepository
                     .findById(produtoId)
                     .orElseThrow(() ->
-                            new IllegalArgumentException(
-                                    "Produto não encontrado: " + produtoId
+                            new RecursoNaoEncontradoException(
+                                    "Produto não encontrado: "
+                                            + produtoId
                             )
                     );
 
@@ -87,7 +93,7 @@ public class LocacaoService {
             if (itemRequest.getQuantidade()
                     > quantidadeDisponivel) {
 
-                throw new IllegalArgumentException(
+                throw new RegraNegocioException(
                         "Estoque insuficiente para o produto "
                                 + produto.getNome()
                                 + ". Disponível: "
@@ -109,19 +115,19 @@ public class LocacaoService {
 
     private void validarRequisicao(LocacaoRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException(
+            throw new RegraNegocioException(
                     "Os dados da locação são obrigatórios"
             );
         }
 
         if (request.getClienteId() == null) {
-            throw new IllegalArgumentException(
+            throw new RegraNegocioException(
                     "O cliente é obrigatório"
             );
         }
 
         if (request.getDataPrevistaDevolucao() == null) {
-            throw new IllegalArgumentException(
+            throw new RegraNegocioException(
                     "A data prevista é obrigatória"
             );
         }
@@ -129,7 +135,7 @@ public class LocacaoService {
         if (request.getDataPrevistaDevolucao()
                 .isBefore(LocalDate.now())) {
 
-            throw new IllegalArgumentException(
+            throw new RegraNegocioException(
                     "A data prevista não pode estar no passado"
             );
         }
@@ -137,7 +143,7 @@ public class LocacaoService {
         if (request.getItens() == null
                 || request.getItens().isEmpty()) {
 
-            throw new IllegalArgumentException(
+            throw new RegraNegocioException(
                     "A locação deve possuir pelo menos um item"
             );
         }
@@ -145,7 +151,7 @@ public class LocacaoService {
 
     private void validarItem(ItemLocacaoRequest item) {
         if (item == null || item.getProdutoId() == null) {
-            throw new IllegalArgumentException(
+            throw new RegraNegocioException(
                     "O produto é obrigatório"
             );
         }
@@ -153,11 +159,9 @@ public class LocacaoService {
         if (item.getQuantidade() == null
                 || item.getQuantidade() <= 0) {
 
-            throw new IllegalArgumentException(
+            throw new RegraNegocioException(
                     "A quantidade deve ser maior que zero"
             );
         }
     }
 }
-
-
