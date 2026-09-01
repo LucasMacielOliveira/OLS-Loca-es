@@ -15,6 +15,7 @@ import ols_locacoes.repository.LocacaoRepository;
 import ols_locacoes.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -112,6 +113,50 @@ public class LocacaoService {
 
         return LocacaoResponse.fromEntity(locacaoSalva);
     }
+    private Locacao buscarEntidadePorId(Long id) {
+        return locacaoRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Locação não encontrada: " + id
+                        )
+                );
+    }
+
+    @Transactional(readOnly = true)
+    public List<LocacaoResponse> listarTodas() {
+        return locacaoRepository
+                .findAll()
+                .stream()
+                .map(LocacaoResponse::fromEntity)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public LocacaoResponse buscarPorId(Long id) {
+        Locacao locacao = buscarEntidadePorId(id);
+
+        return LocacaoResponse.fromEntity(locacao);
+    }
+
+    @Transactional
+    public LocacaoResponse registrarDevolucao(Long id) {
+        Locacao locacao = buscarEntidadePorId(id);
+
+        if (locacao.getStatus() == StatusLocacao.DEVOLVIDA) {
+            throw new RegraNegocioException(
+                    "A locação " + id + " já foi devolvida"
+            );
+        }
+
+        locacao.registrarDevolucao();
+
+        Locacao locacaoSalva =
+                locacaoRepository.save(locacao);
+
+        return LocacaoResponse.fromEntity(locacaoSalva);
+    }
+
 
     private void validarRequisicao(LocacaoRequest request) {
         if (request == null) {
