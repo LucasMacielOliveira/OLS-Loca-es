@@ -1,56 +1,46 @@
 package ols_locacoes.Controller;
 
-import java.util.List;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import ols_locacoes.dto.ProdutoResponse;
 import ols_locacoes.model.Produto;
 import ols_locacoes.service.ProdutoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/produtos")
 public class ProdutoController {
 
-    private final ProdutoService produtoService; // indica que o controller precisa utilizar os serviços de ProdutoService.
+    private final ProdutoService produtoService;
 
-    public ProdutoController(ProdutoService produtoService) { //o Spring entrega automaticamente a instância de ProdutoService.
+    public ProdutoController(
+            ProdutoService produtoService
+    ) {
         this.produtoService = produtoService;
     }
 
     @GetMapping
-    public List<Produto> listarProdutos() {
+    public List<ProdutoResponse> listarProdutos() {
         return produtoService.listarProdutos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Produto> buscarProdutoPorId(
+    public ResponseEntity<ProdutoResponse> buscarProdutoPorId(
             @PathVariable Long id
     ) {
-
-        Produto produto = produtoService.buscarProdutoPorId(id);
-
-        if (produto == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(produto);
+        return ResponseEntity.ok(
+                produtoService.buscarProdutoPorId(id)
+        );
     }
 
     @PostMapping
-    public ResponseEntity<Produto> cadastrarProduto(
+    public ResponseEntity<ProdutoResponse> cadastrarProduto(
             @RequestBody Produto produto
     ) {
-
-        Produto produtoCadastrado = produtoService.cadastrarProduto(produto);
+        ProdutoResponse produtoCadastrado =
+                produtoService.cadastrarProduto(produto);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -58,33 +48,23 @@ public class ProdutoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Produto> atualizarProduto(
+    public ResponseEntity<ProdutoResponse> atualizarProduto(
             @PathVariable Long id,
             @RequestBody Produto dadosAtualizados
     ) {
-
-        Produto produtoAtualizado = produtoService.atualizarProduto(
-                id,
-                dadosAtualizados
+        return ResponseEntity.ok(
+                produtoService.atualizarProduto(
+                        id,
+                        dadosAtualizados
+                )
         );
-
-        if (produtoAtualizado == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(produtoAtualizado);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluirProduto(
             @PathVariable Long id
     ) {
-
-        boolean produtoExcluido = produtoService.excluirProduto(id);
-
-        if (!produtoExcluido) {
-            return ResponseEntity.notFound().build();
-        }
+        produtoService.excluirProduto(id);
 
         return ResponseEntity.noContent().build();
     }

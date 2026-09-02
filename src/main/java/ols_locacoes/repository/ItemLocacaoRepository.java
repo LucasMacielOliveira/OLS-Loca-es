@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 public interface ItemLocacaoRepository
         extends JpaRepository<ItemLocacao, Long> {
 
+    boolean existsByProduto_Id(Long produtoId);
     @Query("""
             SELECT COALESCE(SUM(item.quantidade), 0)
             FROM ItemLocacao item

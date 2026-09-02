@@ -1,51 +1,80 @@
 package ols_locacoes.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
+import ols_locacoes.dto.ProdutoResponse;
+import ols_locacoes.exception.RegraNegocioException;
+import ols_locacoes.exception.RecursoNaoEncontradoException;
 import ols_locacoes.model.Produto;
+import ols_locacoes.model.StatusLocacao;
+import ols_locacoes.repository.ItemLocacaoRepository;
 import ols_locacoes.repository.ProdutoRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class ProdutoService {
 
     private final ProdutoRepository produtoRepository;
+    private final ItemLocacaoRepository itemLocacaoRepository;
 
     public ProdutoService(
-            ProdutoRepository produtoRepository
+            ProdutoRepository produtoRepository,
+            ItemLocacaoRepository itemLocacaoRepository
     ) {
-
         this.produtoRepository = produtoRepository;
+        this.itemLocacaoRepository = itemLocacaoRepository;
     }
 
-    public List<Produto> listarProdutos() {
-        return produtoRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<ProdutoResponse> listarProdutos() {
+        return produtoRepository
+                .findAll()
+                .stream()
+                .map(this::converterParaResponse)
+                .toList();
     }
 
-    public Produto cadastrarProduto(Produto produto) {
+    @Transactional
+    public ProdutoResponse cadastrarProduto(Produto produto) {
+        validarDados(produto);
 
         produto.setId(null);
 
-        return produtoRepository.save(produto);
+        Produto produtoSalvo =
+                produtoRepository.save(produto);
+
+        return converterParaResponse(produtoSalvo);
     }
 
-    public Produto buscarProdutoPorId(Long id) {
-
-        return produtoRepository
-                .findById(id)
-                .orElse(null);
+    @Transactional(readOnly = true)
+    public ProdutoResponse buscarProdutoPorId(Long id) {
+        return converterParaResponse(
+                buscarEntidadePorId(id)
+        );
     }
 
-    public Produto atualizarProduto(
+    @Transactional
+    public ProdutoResponse atualizarProduto(
             Long id,
             Produto dadosAtualizados
     ) {
+        validarDados(dadosAtualizados);
 
-        Produto produtoExistente = buscarProdutoPorId(id);
+        Produto produtoExistente =
+                buscarEntidadePorId(id);
 
-        if (produtoExistente == null) {
-            return null;
+        int quantidadeAlugada =
+                calcularQuantidadeAlugada(id);
+
+        if (dadosAtualizados.getQuantidadeTotal()
+                < quantidadeAlugada) {
+
+            throw new RegraNegocioException(
+                    "A quantidade total não pode ser menor "
+                            + "que a quantidade alugada: "
+                            + quantidadeAlugada
+            );
         }
 
         produtoExistente.setNome(
@@ -60,19 +89,90 @@ public class ProdutoService {
                 dadosAtualizados.getQuantidadeTotal()
         );
 
-        return produtoRepository.save(
-                produtoExistente
+        Produto produtoSalvo =
+                produtoRepository.save(produtoExistente);
+
+        return converterParaResponse(produtoSalvo);
+    }
+
+    @Transactional
+    public void excluirProduto(Long id) {
+        Produto produto = buscarEntidadePorId(id);
+
+        if (itemLocacaoRepository.existsByProduto_Id(id)) {
+            throw new RegraNegocioException(
+                    "O produto não pode ser excluído "
+                            + "porque possui histórico de locações"
+            );
+        }
+
+        produtoRepository.delete(produto);
+    }
+
+    private Produto buscarEntidadePorId(Long id) {
+        return produtoRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Produto não encontrado: " + id
+                        )
+                );
+    }
+
+    private ProdutoResponse converterParaResponse(
+            Produto produto
+    ) {
+        int quantidadeAlugada =
+                calcularQuantidadeAlugada(produto.getId());
+
+        int quantidadeDisponivel =
+                produto.getQuantidadeTotal()
+                        - quantidadeAlugada;
+
+        return new ProdutoResponse(
+                produto.getId(),
+                produto.getNome(),
+                produto.getCategoria(),
+                produto.getQuantidadeTotal(),
+                quantidadeDisponivel
         );
     }
 
-    public boolean excluirProduto(Long id) {
+    private int calcularQuantidadeAlugada(
+            Long produtoId
+    ) {
+        Long quantidade = itemLocacaoRepository
+                .somarQuantidadePorProdutoEStatus(
+                        produtoId,
+                        StatusLocacao.ATIVA
+                );
 
-        if (!produtoRepository.existsById(id)) {
-            return false;
+        return quantidade == null
+                ? 0
+                : quantidade.intValue();
+    }
+
+    private void validarDados(Produto produto) {
+        if (produto == null) {
+            throw new RegraNegocioException(
+                    "Os dados do produto são obrigatórios"
+            );
         }
 
-        produtoRepository.deleteById(id);
+        if (produto.getNome() == null
+                || produto.getNome().isBlank()) {
 
-        return true;
+            throw new RegraNegocioException(
+                    "O nome do produto é obrigatório"
+            );
+        }
+
+        if (produto.getCategoria() == null
+                || produto.getCategoria().isBlank()) {
+
+            throw new RegraNegocioException(
+                    "A categoria do produto é obrigatória"
+            );
+        }
     }
 }
